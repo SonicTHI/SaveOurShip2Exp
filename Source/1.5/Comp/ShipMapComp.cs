@@ -393,16 +393,19 @@ namespace SaveOurShip2
 			fuel = 0;
 			foreach (SpaceShipCache ship in ShipsOnMap.Values)
 			{
-				foreach (CompEngineTrail engine in ship.Engines.Where(e => e.FuelUse > 0))
+				if (ship.HasRCS())
 				{
-					fuel += engine.refuelComp.Fuel;
-					if (engine.PodFueled)
+					foreach (CompEngineTrail engine in ship.Engines.Where(e => e.FuelUse > 0))
+					{
 						fuel += engine.refuelComp.Fuel;
-					engines.Add(engine);
-				}
-				foreach (CompShipBay bay in ship.Bays.Where(t => t is CompShipBaySalvage))
-				{
-					maxMass += ((CompShipBaySalvage)bay).SalvageWeight;
+						if (engine.PodFueled)
+							fuel += engine.refuelComp.Fuel;
+						engines.Add(engine);
+					}
+					foreach (CompShipBay bay in ship.Bays.Where(t => t is CompShipBaySalvage))
+					{
+						maxMass += ((CompShipBaySalvage)bay).SalvageWeight;
+					}
 				}
 			}
 			return engines;
@@ -974,7 +977,7 @@ namespace SaveOurShip2
 			//post ship spawn - map name
 			if (fleet)
 			{
-				mp.Name = "Ship fleet " + newMap.uniqueID;
+				mp.Name = "SoS.ShipFleet".Translate() + " " + newMap.uniqueID;
 			}
 			else
 			{
