@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{D6ACD814-1171-42A6-B4C0-4D74A8ECACDC}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>RimworldMod</RootNamespace>
+    <RootNamespace>SaveOurShip2</RootNamespace>
     <AssemblyName>ShipsHaveInsides</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
@@ -53,16 +53,8 @@
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\..\..\..\..\..\workshop\content\294100\2009463077\Current\Assemblies\0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SmashTools">
-      <HintPath>..\..\..\..\..\..\workshop\content\294100\3014915404\1.5\Assemblies\SmashTools.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -91,8 +83,16 @@
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\..\2009463077 Harmony\Current\Assemblies\0Harmony.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SmashTools">
+      <HintPath>..\..\..\3014915404 Vehicle Framework\1.5\Assemblies\SmashTools.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Vehicles">
-      <HintPath>..\..\..\..\..\..\workshop\content\294100\3014915404\1.5\Assemblies\Vehicles.dll</HintPath>
+      <HintPath>..\..\..\3014915404 Vehicle Framework\1.5\Assemblies\Vehicles.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
