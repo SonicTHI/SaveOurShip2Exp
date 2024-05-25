@@ -2797,6 +2797,12 @@ namespace SaveOurShip2
 				__instance.nextCellCostTotal *= 20;
 				return;
 			}
+			if (___pawn is VehiclePawn vehicle && !ShipInteriorMod2.IsShuttle(vehicle)) //no vroom vroom in space
+			{
+				__instance.nextCellCostLeft *= 20;
+				__instance.nextCellCostTotal *= 20;
+				return;
+			}
 			float vacuumSpeedMultiplier = ___pawn.GetStatValue(ResourceBank.StatDefOf.VacuumSpeedMultiplier);
 			if (vacuumSpeedMultiplier > 0.0f && vacuumSpeedMultiplier != 1.0f)
 			{
