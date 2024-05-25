@@ -113,11 +113,10 @@ namespace SaveOurShip2
 						if (powerComp != null && powerComp.PowerNet != null && powerComp.PowerNet.batteryComps.Count > 0)
 						{
 							IEnumerable<CompPowerBattery> batteries = powerComp.PowerNet.batteryComps.Where(b => b.StoredEnergy <= b.Props.storedEnergyMax - 1);
-							if (batteries.Any())
+							if (RemHeatFromNetwork(Props.heatVent) && batteries.Any())
 							{
 								batteries.RandomElement().AddEnergy(2);
 							}
-							RemHeatFromNetwork(Props.heatVent);
 							if (myNet.Depletion > 0)
 								RemoveDepletionFromNetwork(Props.heatVent / 1000f);
 						}

@@ -240,7 +240,7 @@
 			<li>
 				<key>Hull</key>
 				<label>Hull</label>
-				<health>200</health>
+				<health>150</health>
 				<depth>External</depth>
 				
 				<hitbox>
@@ -1538,7 +1538,7 @@
 			<li>
 				<key>Hull</key>
 				<label>Hull</label>
-				<health>800</health>
+				<health>700</health>
 				<depth>External</depth>
 				
 				<hitbox>
@@ -2368,7 +2368,7 @@
 			<li>
 				<key>Hull</key>
 				<label>Hull</label>
-				<health>1200</health>
+				<health>1000</health>
 				<depth>External</depth>
 				
 				<hitbox>
