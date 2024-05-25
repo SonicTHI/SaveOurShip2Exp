@@ -130,7 +130,7 @@ namespace SaveOurShip2
 		{
 			base.GetSettings<ModSettings_SoS>();
 		}
-		public const string SOS2version = "SteamV2.7.0";
+		public const string SOS2version = "EXPv102";
 		public const int SOS2ReqCurrentMinor = 5;
 		public const int SOS2ReqCurrentBuild = 4062;
 
@@ -2117,6 +2117,23 @@ namespace SaveOurShip2
 			{
 				z.Delete();
 			}*/
+
+			List<CompEngineTrail> engines = new List<CompEngineTrail>();
+			foreach (CompEngineTrail engine in ship.Engines.Where(e => e.flickComp.SwitchIsOn && !e.Props.energy && !e.Props.reactionless && e.refuelComp.Fuel > 0 && (!targetMapIsSpace || e.Props.takeOff)))
+			{
+				if (targetMapIsSpace)
+				{
+					if (engine.parent.Rotation.AsByte == 0)
+						fireExplosions.Add(engine.parent.Position + new IntVec3(0, 0, -3));
+					else if (engine.parent.Rotation.AsByte == 1)
+						fireExplosions.Add(engine.parent.Position + new IntVec3(-3, 0, 0));
+					else if (engine.parent.Rotation.AsByte == 2)
+						fireExplosions.Add(engine.parent.Position + new IntVec3(0, 0, 3));
+					else
+						fireExplosions.Add(engine.parent.Position + new IntVec3(3, 0, 0));
+				}
+				engines.Add(engine);
+			}
 			if (!targetMapIsSpace)
 			{
 				foreach (IntVec3 pos in targetArea) //check since placeworker ignores this
@@ -2319,8 +2336,7 @@ namespace SaveOurShip2
 			{
 				float fuelNeeded = ship.MassActual;
 				float fuelStored = 0f;
-				List<CompEngineTrail> engines = new List<CompEngineTrail>();
-				foreach (CompEngineTrail engine in ship.Engines.Where(e => e.flickComp.SwitchIsOn && !e.Props.energy && !e.Props.reactionless && e.refuelComp.Fuel > 0 && (!targetMapIsSpace || e.Props.takeOff)))
+				foreach (CompEngineTrail engine in engines)
 				{
 					fuelStored += engine.refuelComp.Fuel;
 					if (engine.PodFueled)
@@ -2335,7 +2351,6 @@ namespace SaveOurShip2
 							}
 						}
 					}
-					engines.Add(engine);
 				}
 				if (sourceMapIsSpace)
 				{
@@ -2362,17 +2377,6 @@ namespace SaveOurShip2
 				foreach (CompEngineTrail engine in engines)
 				{
 					engine.refuelComp.ConsumeFuel(fuelNeeded * engine.refuelComp.Fuel / fuelStored);
-					if (targetMapIsSpace)
-					{
-						if (engine.parent.Rotation.AsByte == 0)
-							fireExplosions.Add(engine.parent.Position + new IntVec3(0, 0, -3));
-						else if (engine.parent.Rotation.AsByte == 1)
-							fireExplosions.Add(engine.parent.Position + new IntVec3(-3, 0, 0));
-						else if (engine.parent.Rotation.AsByte == 2)
-							fireExplosions.Add(engine.parent.Position + new IntVec3(0, 0, 3));
-						else
-							fireExplosions.Add(engine.parent.Position + new IntVec3(3, 0, 0));
-					}
 				}
 				if (devMode)
 					watch.Record("takeoffEffects");
@@ -3187,6 +3191,10 @@ namespace SaveOurShip2
 						vehicle.CompUpgradeTree.FinishUnlock(vehicle.CompUpgradeTree.Props.def.GetNode("CargoHeatsink"));
 				}
 			}
+		}
+		public static float ShuttleDodgeChance(VehiclePawn vehicle, int dodgeSkill) //.416 - .625
+		{
+			return vehicle.GetStatValue(ResourceBank.VehicleStatDefOf.SoS2CombatDodgeChance) / Mathf.Lerp(120, 80, dodgeSkill / 20f);
 		}
 	}
 

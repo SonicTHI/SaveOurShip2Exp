@@ -7,6 +7,7 @@ using Verse;
 using Verse.Sound;
 using RimWorld.Planet;
 using RimWorld;
+using Vehicles;
 
 namespace SaveOurShip2
 {
@@ -62,7 +63,7 @@ namespace SaveOurShip2
 						if (count > 25)
 							break;
 
-						if (!t.Destroyed && !(t is Building) && t.def != ResourceBank.ThingDefOf.DetachedShipPart && !things.Contains(t) && t.def.BaseMass < 500)
+						if (!t.Destroyed && !(t is Building) && t.def != ResourceBank.ThingDefOf.DetachedShipPart && !things.Contains(t) && t.def.BaseMass < 500 && !(t is VehiclePawn p && (p.def.Size.x > 1 || p.def.Size.z > 1)))
 						{
 							if (t.def.stackLimit == 1)
 								count++;

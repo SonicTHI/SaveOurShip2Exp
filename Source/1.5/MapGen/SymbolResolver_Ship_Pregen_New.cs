@@ -25,6 +25,7 @@ namespace SaveOurShip2
 				((ThingWithComps)thing).TryGetComp<CompRefuelable>().Refuel(9999);
 			}
 			cores.FirstOrFallback().TryGetComp<CompBuildingConsciousness>().AIName = "Charlon Whitestone";
+			QuestUtility.SendQuestTargetSignals(BaseGen.globalSettings.map.Parent.questTags, "LaunchedShip");
 		}
 	}
 }

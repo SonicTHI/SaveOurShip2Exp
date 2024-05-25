@@ -45,35 +45,38 @@ namespace SaveOurShip2
 		public override void Depart()
 		{
 			var mapComp = Map.GetComponent<ShipMapComp>();
-			int bounty = ShipInteriorMod2.WorldComp.PlayerFactionBounty;
-			int roll = Rand.RangeInclusive(1, 10);
-			if (bounty > 50) //player is pirate
+			if (mapComp.ShipMapState == ShipMapState.nominal)
 			{
-				if ((!parleyed && roll < 5) || (parleyed && roll < 2)) //betrayal
+				int bounty = ShipInteriorMod2.WorldComp.PlayerFactionBounty;
+				int roll = Rand.RangeInclusive(1, 10);
+				if (bounty > 50) //player is pirate
 				{
-					Find.LetterStack.ReceiveLetter(TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksBetray"), TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksBetrayDesc"), LetterDefOf.ThreatBig);
-					mapComp.StartShipEncounter(this);
-					return;
-				}
-			}
-			else //not a pirate
-			{
-				if (paidOff || parleyed)
-				{
-					if (roll < 3) //pirates want more
+					if ((!parleyed && roll < 5) || (parleyed && roll < 2)) //betrayal
 					{
-						Find.LetterStack.ReceiveLetter(TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksPay"), TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksPayDesc"), LetterDefOf.ThreatBig);
+						Find.LetterStack.ReceiveLetter(TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksBetray"), TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksBetrayDesc"), LetterDefOf.ThreatBig);
 						mapComp.StartShipEncounter(this);
 						return;
 					}
 				}
-				else //didnt pay/parley
+				else //not a pirate
 				{
-					if (roll < 10)
+					if (paidOff || parleyed)
 					{
-						Find.LetterStack.ReceiveLetter(TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksWait"), TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksWaitDesc"), LetterDefOf.ThreatBig);
-						mapComp.StartShipEncounter(this);
-						return;
+						if (roll < 3) //pirates want more
+						{
+							Find.LetterStack.ReceiveLetter(TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksPay"), TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksPayDesc"), LetterDefOf.ThreatBig);
+							mapComp.StartShipEncounter(this);
+							return;
+						}
+					}
+					else //didnt pay/parley
+					{
+						if (roll < 10)
+						{
+							Find.LetterStack.ReceiveLetter(TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksWait"), TranslatorFormattedStringExtensions.Translate("SoS.PirateAttacksWaitDesc"), LetterDefOf.ThreatBig);
+							mapComp.StartShipEncounter(this);
+							return;
+						}
 					}
 				}
 			}

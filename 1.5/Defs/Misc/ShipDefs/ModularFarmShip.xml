@@ -9,16 +9,7 @@
 		<sizeZ>76</sizeZ>
 		<label>Modular Farm Ship</label>
 		<combatPoints>501</combatPoints>
-		<rarityLevel>0</rarityLevel>
-		<neverRandom>False</neverRandom>
-		<neverAttacks>False</neverAttacks>
-		<neverWreck>False</neverWreck>
-		<startingShip>False</startingShip>
-		<startingDungeon>False</startingDungeon>
-		<spaceSite>False</spaceSite>
-		<tradeShip>False</tradeShip>
-		<navyExclusive>False</navyExclusive>
-		<customPaintjob>False</customPaintjob>
+		<neverAttacks>true</neverAttacks>
 		<neverFleet>True</neverFleet>
 		<core>
 			<shapeOrDef>Ship_DroneCore</shapeOrDef>

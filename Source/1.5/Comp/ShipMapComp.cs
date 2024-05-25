@@ -626,7 +626,7 @@ namespace SaveOurShip2
 			if ((shipIndex > 0 && ShipsOnMap[shipIndex].LifeSupports.Any(s => s.active)) || MapExtenderCells.Contains(vec))
 				return true;
 			//LS if roofed room with thick rock roof and facing in vent that is attached to LS
-			if (vec.Roofed(map) && vec.GetRoof(map) == RoofDefOf.RoofRockThick)
+			if (vec.GetRoof(map) == RoofDefOf.RoofRockThick)
 			{
 				Room room = vec.GetRoom(map);
 				if (!ShipInteriorMod2.ExposedToOutside(room))
@@ -750,15 +750,20 @@ namespace SaveOurShip2
 			//target or create map + spawn ships
 			ShipCombatOriginMap = map;
 			if (targetMap == null)
-				ShipCombatTargetMap = SpawnEnemyShipMap(passingShip, fac, fleet, bounty);
-			else
-				ShipCombatTargetMap = targetMap;
-			//if ship is derelict switch to "encounter"
-			if (TargetMapComp.ShipMapState == ShipMapState.isGraveyard)
 			{
-				ShipCombatTargetMap = null; //td no ship combat vs no ship maps, for now
-				targetMapComp = null;
-				return;
+				ShipCombatTargetMap = SpawnEnemyShipMap(passingShip, fac, fleet, bounty);
+				//if ship is derelict switch to "encounter"
+				if (TargetMapComp.ShipMapState == ShipMapState.isGraveyard)
+				{
+					ShipCombatTargetMap = null;
+					targetMapComp = null;
+					return;
+				}
+			}
+			else
+			{
+				ShipFaction = Faction.OfPlayer;
+				ShipCombatTargetMap = targetMap;
 			}
 			Log.Message("SOS2: ".Colorize(Color.cyan) + map + " Starting combat vs map: ".Colorize(Color.green) + ShipCombatTargetMap);
 			TargetMapComp.ShipCombatTargetMap = ShipCombatOriginMap;
@@ -1187,201 +1192,20 @@ namespace SaveOurShip2
 						else
 							mission.rangeTraveled = Mathf.Min(targetRange, mission.rangeTraveled + moveSpeed);
 
-						if (mission.mission == ShuttleMission.STRAFE)
+						mission.weaponCooldown -= 1;
+						if (mission.weaponCooldown <= 0)
 						{
-							mission.weaponCooldown -= 1;
-							if (mission.weaponCooldown <= 0 && mission.rangeTraveled >= OriginMapComp.Range - 50f)
+							if (mission.mission == ShuttleMission.STRAFE && mission.rangeTraveled >= OriginMapComp.Range - 50f)
 							{
-								int? bestSkill = mission.shuttle.FindPawnWithBestStat(StatDefOf.ShootingAccuracyPawn)?.skills?.GetSkill(SkillDefOf.Shooting)?.Level;
-								int skill = 0;
-								if (bestSkill.HasValue)
-									skill = bestSkill.Value;
-								float missAngle = Mathf.Lerp(1.5f, 0.5f, skill / 20f);
-								IntVec3 targetCell;
-								if(mission.shuttle.Faction==Faction.OfPlayer)
-                                {
-									if (TargetMapComp.ShuttleTarget != IntVec3.Invalid)
-										targetCell = TargetMapComp.ShuttleTarget;
-									else
-										targetCell = ShipCombatTargetMap.listerBuildings.allBuildingsNonColonist.RandomElement().Position;
-
-								}
-								else
-									targetCell = ShipCombatTargetMap.listerBuildings.allBuildingsColonist.RandomElement().Position;
-								IntVec3 spawnCell = FindClosestEdgeCell(ShipCombatTargetMap, targetCell);
-								foreach (VehicleTurret turret in mission.shuttle.CompVehicleTurrets.turrets)
-								{
-									if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser)
-									{
-										Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Laser_Space, spawnCell, ShipCombatTargetMap);
-										IntVec3 a = targetCell - spawnCell;
-										float angle = a.AngleFlat + Rand.Range(-missAngle/4f, missAngle/4f);
-										IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
-										projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
-										mission.shuttle.compFuel.ConsumeFuel(2);
-									}
-									else if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttlePlasma)
-									{
-										Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Plasma, spawnCell, ShipCombatTargetMap);
-										IntVec3 a = targetCell - spawnCell;
-										float angle = a.AngleFlat + Rand.Range(-missAngle, missAngle);
-										IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
-										projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
-										mission.shuttle.compFuel.ConsumeFuel(2);
-									}
-								}
-								mission.weaponCooldown = 120f;
+								ShuttleStrafe(mission);
 							}
-						}
-						else if (mission.mission == ShuttleMission.BOMB)
-						{
-							mission.weaponCooldown -= 1;
-							if (mission.weaponCooldown <= 0 && mission.rangeTraveled >= OriginMapComp.Range - 10f)
+							else if (mission.mission == ShuttleMission.BOMB && mission.weaponCooldown <= 0 && mission.rangeTraveled >= OriginMapComp.Range - 10f)
 							{
-								int? bestSkill = mission.shuttle.FindPawnWithBestStat(StatDefOf.ShootingAccuracyPawn)?.skills?.GetSkill(SkillDefOf.Shooting)?.Level;
-								int skill = 0;
-								if (bestSkill.HasValue)
-									skill = bestSkill.Value;
-								float missAngle = Mathf.Lerp(4f, 2f, skill / 20f);
-								IntVec3 targetCell = (mission.shuttle.Faction == Faction.OfPlayer ? ShipCombatTargetMap.listerBuildings.allBuildingsNonColonist.RandomElement().Position : ShipCombatTargetMap.listerBuildings.allBuildingsColonist.RandomElement().Position);
-								IntVec3 spawnCell = FindClosestEdgeCell(ShipCombatTargetMap, targetCell);
-								foreach (VehicleTurret turret in mission.shuttle.CompVehicleTurrets.turrets)
-								{
-									if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleTorpedo && turret.loadedAmmo != null)
-									{
-										Projectile projectile = (Projectile)GenSpawn.Spawn(turret.loadedAmmo.projectileWhenLoaded.interactionCellIcon, spawnCell, ShipCombatTargetMap);
-										IntVec3 a = targetCell - spawnCell;
-										float angle = a.AngleFlat + Rand.Range(-missAngle, missAngle);
-										IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
-										projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
-										Thing torpToLoad = mission.shuttle.inventory.innerContainer.Where(thing => thing.HasThingCategory(ResourceBank.ThingCategoryDefOf.SpaceTorpedoes)).FirstOrDefault();
-										if (torpToLoad==null)
-                                        {
-											if(mission.shuttle.Faction==Faction.OfPlayer)
-												Messages.Message("SoS.ShuttleOutOfTorps".Translate(), MessageTypeDefOf.CautionInput);
-											else
-												Messages.Message("SoS.EnemyShuttleOutOfTorps".Translate(), MessageTypeDefOf.PositiveEvent);
-											mission.mission = ShuttleMission.RETURN;
-                                        }
-										else
-                                        {
-											turret.shellCount=0;
-											turret.AutoReloadCannon();
-                                        }
-									}
-									else if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser)
-									{
-										for (int i = 0; i < 6; i++)
-										{
-											Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Laser, spawnCell, ShipCombatTargetMap);
-											IntVec3 a = targetCell - spawnCell;
-											float angle = a.AngleFlat + Rand.Range(-2, 2);
-											IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
-											projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
-										}
-										mission.shuttle.compFuel.ConsumeFuel(2);
-									}
-									else if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttlePlasma)
-									{
-										Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Plasma, spawnCell, ShipCombatTargetMap);
-										IntVec3 a = targetCell - spawnCell;
-										float angle = a.AngleFlat + Rand.Range(-4, 4);
-										IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
-										projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
-										mission.shuttle.compFuel.ConsumeFuel(2);
-									}
-								}
-								mission.weaponCooldown = 2400f;
+								ShuttleBomb(mission);
 							}
-						}
-						else //intercept
-                        {
-							mission.weaponCooldown -= 1;
-							if (mission.weaponCooldown <= 0)
+							else
 							{
-								int? bestSkill = mission.shuttle.FindPawnWithBestStat(StatDefOf.ShootingAccuracyPawn)?.skills?.GetSkill(SkillDefOf.Shooting)?.Level;
-								int pilotShootingSkill = 0;
-								if (bestSkill.HasValue)
-									pilotShootingSkill = bestSkill.Value;
-								if (TargetMapComp.TorpsInRange.Any())
-								{
-									int numLasers = mission.shuttle.CompVehicleTurrets.turrets.Where(turret => turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser).Count();
-									for (int i = 0; i < numLasers; i++)
-									{
-										if (Rand.Chance(Mathf.Lerp(0.75f, 1.25f, pilotShootingSkill / 20f)))
-										{
-											ShipCombatProjectile projtr = TargetMapComp.TorpsInRange.RandomElement();
-											TargetMapComp.Projectiles.Remove(projtr);
-											TargetMapComp.TorpsInRange.Remove(projtr);
-										}
-										mission.shuttle.compFuel.ConsumeFuel(2);
-									}
-									mission.weaponCooldown = 80f;
-								}
-								else if (TargetMapComp.ShuttlesInRange.Where(shuttle => shuttle.Faction != mission.shuttle.Faction).Any())
-								{
-									foreach (VehicleTurret laser in mission.shuttle.CompVehicleTurrets.turrets.Where(turret => turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser))
-									{
-										VehiclePawn shuttleHit = TargetMapComp.ShuttlesInRange.Where(shuttle => shuttle.Faction != mission.shuttle.Faction).RandomElement();
-										int? bestIntellectual = shuttleHit.FindPawnWithBestStat(StatDefOf.ResearchSpeed)?.skills?.GetSkill(SkillDefOf.Intellectual)?.Level;
-										int targetIntellectualSkill = 0;
-										if (bestIntellectual.HasValue)
-											targetIntellectualSkill = bestIntellectual.Value;
-										if (Rand.Chance(Mathf.Lerp(0.85f, 1.15f, pilotShootingSkill / 20f) - (shuttleHit.GetStatValue(ResourceBank.VehicleStatDefOf.SoS2CombatDodgeChance) / Mathf.Lerp(120, 80, targetIntellectualSkill / 20f))))
-										{
-											CompVehicleHeatNet heatNet = shuttleHit.GetComp<CompVehicleHeatNet>();
-											if (shuttleHit.GetComp<CompShipHeatShield>() != null && shuttleHit.statHandler.componentsByKeys["shieldGenerator"].health > 10 && heatNet != null && heatNet.myNet.StorageUsed < heatNet.myNet.StorageCapacity) //Shield takes the hit
-											{
-												Projectile dummyProjectile = (Projectile)ThingMaker.MakeThing(ResourceBank.ThingDefOf.Shuttle_Laser);
-												shuttleHit.GetComp<CompShipHeatShield>().HitShield(dummyProjectile);
-												dummyProjectile.Destroy();
-											}
-											else
-											{
-												shuttleHit.TakeDamage(new DamageInfo(ResourceBank.ThingDefOf.Shuttle_Laser.projectile.damageDef, ResourceBank.ThingDefOf.Shuttle_Laser.projectile.damageAmountBase), IntVec2.Zero);
-												if (shuttleHit.statHandler.GetStatValue(VehicleStatDefOf.BodyIntegrity) <= 0)
-												{
-													if (shuttleHit.Faction == Faction.OfPlayer)
-														Messages.Message(TranslatorFormattedStringExtensions.Translate("SoS.CombatPodDestroyedPlayer"), null, MessageTypeDefOf.NegativeEvent);
-													else
-														Messages.Message(TranslatorFormattedStringExtensions.Translate("SoS.CombatPodDestroyedEnemy"), null, MessageTypeDefOf.PositiveEvent);
-													TargetMapComp.DeRegisterShuttleMission(TargetMapComp.ShuttleMissions.Where(otherMission => otherMission.shuttle == shuttleHit).First(), true);
-													foreach (Pawn pawn in shuttleHit.AllPawnsAboard.ListFullCopy())
-													{
-														if (pawn.Faction == Faction.OfPlayer && (ModSettings_SoS.easyMode || Rand.Chance(0.5f)))
-														{
-															HealthUtility.DamageUntilDowned(pawn, false);
-															shuttleHit.RemovePawn(pawn);
-															DropPodUtility.DropThingsNear(DropCellFinder.RandomDropSpot(ShipCombatOriginMap), OriginMapComp.map, new List<Thing> { pawn });
-														}
-														else
-														{
-															shuttleHit.RemovePawn(pawn);
-															pawn.Kill(new DamageInfo(DamageDefOf.Bomb, 100f));
-															if (pawn.Faction == Faction.OfPlayer)
-																DropPodUtility.DropThingsNear(DropCellFinder.RandomDropSpot(ShipCombatOriginMap), OriginMapComp.map, new List<Thing> { pawn.Corpse });
-														}
-													}
-													foreach (Thing cargo in shuttleHit.GetDirectlyHeldThings())
-														cargo.Kill();
-												}
-												else if (shuttleHit.statHandler.GetStatValue(VehicleStatDefOf.BodyIntegrity) <= ((CompShuttleLauncher)shuttleHit.CompVehicleLauncher).retreatAtHealth)
-												{
-													ShuttleMissionData missionData = TargetMapComp.ShuttleMissions.Where(otherMission => otherMission.shuttle == shuttleHit).First();
-													if (missionData.mission != ShuttleMission.RETURN)
-													{
-														if (shuttleHit.Faction == Faction.OfPlayer)
-															Messages.Message("SoS.ShuttleRetreat".Translate(), MessageTypeDefOf.NegativeEvent);
-														else
-															Messages.Message("SoS.EnemyShuttleRetreat".Translate(), MessageTypeDefOf.PositiveEvent);
-													}
-													missionData.mission = ShipMapComp.ShuttleMission.RETURN;
-												}
-											}
-										}
-										mission.shuttle.compFuel.ConsumeFuel(2);
-									}
-								}
+								ShuttleIntercept(mission);
 							}
 						}
                     }
@@ -2108,12 +1932,12 @@ namespace SaveOurShip2
 				}
 
 				//trigger combat with next target
-				if (NextTargetMap != null && tick > LastAttackTick + 600)
+				/*if (NextTargetMap != null && tick > LastAttackTick + 600)
 				{
 					StartShipEncounter(null, NextTargetMap);
 					NextTargetMap = null;
 					return;
-				}
+				}*/
 				//RCS fx
 				if (MapEnginePower != 0)
 				{
@@ -2396,6 +2220,7 @@ namespace SaveOurShip2
 			OriginMapComp.ShipBuildingsOff();
 			OriginMapComp.ShipGraveyard?.Parent.GetComponent<TimedForcedExitShip>()?.StartForceExitAndRemoveMapCountdown(Rand.RangeInclusive(60000, 180000) - burnTimeElapsed);
 			tgtMapComp.ShipGraveyard?.Parent.GetComponent<TimedForcedExitShip>()?.StartForceExitAndRemoveMapCountdown(Rand.RangeInclusive(60000, 180000) - burnTimeElapsed);
+			bool startNextFight = false;
 			if (loser != ShipCombatOriginMap)
 			{
 				if (fled) //target fled, remove target
@@ -2436,8 +2261,9 @@ namespace SaveOurShip2
 						//if origin has grave with a ship, grave starts combat with enemy
 						if (OriginMapComp.GraveComp.MapRootListAll.Any() && !OriginMapComp.attackedTradeship)
 						{
-							OriginMapComp.GraveComp.LastAttackTick = Find.TickManager.TicksGame;
-							OriginMapComp.GraveComp.NextTargetMap = OriginMapComp.ShipCombatTargetMap;
+							startNextFight = true;
+							//OriginMapComp.GraveComp.LastAttackTick = Find.TickManager.TicksGame;
+							//OriginMapComp.GraveComp.NextTargetMap = tgtMap;
 						}
 						else //no ships in grave, enemy leaves, clean grave
 						{
@@ -2472,6 +2298,13 @@ namespace SaveOurShip2
 			OriginMapComp.ShipCombatTargetMap = null;
 			OriginMapComp.originMapComp = null;
 			OriginMapComp.targetMapComp = null;
+
+			if (startNextFight)
+			{
+				CameraJumper.TryJump(OriginMapComp.ShipGraveyard.Center, OriginMapComp.ShipGraveyard);
+				OriginMapComp.GraveComp.ShipMapState = ShipMapState.nominal;
+				OriginMapComp.GraveComp.StartShipEncounter(null, tgtMap);
+			}
 		}
 		
 		//proj
@@ -2709,6 +2542,192 @@ namespace SaveOurShip2
 				}
 			}
 			return false;
+		}
+		public void ShuttleIntercept(ShuttleMissionData mission)
+		{
+			int? bestSkill = mission.shuttle.FindPawnWithBestStat(StatDefOf.ShootingAccuracyPawn)?.skills?.GetSkill(SkillDefOf.Shooting)?.Level;
+			int pilotShootingSkill = 0;
+			if (bestSkill.HasValue)
+				pilotShootingSkill = bestSkill.Value;
+			if (TargetMapComp.TorpsInRange.Any())
+			{
+				int numLasers = mission.shuttle.CompVehicleTurrets.turrets.Where(turret => turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser).Count();
+				for (int i = 0; i < numLasers; i++)
+				{
+					if (Rand.Chance(Mathf.Lerp(0.75f, 1.25f, pilotShootingSkill / 20f)))
+					{
+						ShipCombatProjectile projtr = TargetMapComp.TorpsInRange.RandomElement();
+						TargetMapComp.Projectiles.Remove(projtr);
+						TargetMapComp.TorpsInRange.Remove(projtr);
+					}
+					mission.shuttle.compFuel.ConsumeFuel(2);
+				}
+				mission.weaponCooldown = 80f;
+			}
+			else if (TargetMapComp.ShuttlesInRange.Where(shuttle => shuttle.Faction != mission.shuttle.Faction).Any())
+			{
+				foreach (VehicleTurret laser in mission.shuttle.CompVehicleTurrets.turrets.Where(turret => turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser))
+				{
+					VehiclePawn shuttleHit = TargetMapComp.ShuttlesInRange.Where(shuttle => shuttle.Faction != mission.shuttle.Faction).RandomElement();
+					int? bestIntellectual = shuttleHit.FindPawnWithBestStat(StatDefOf.ResearchSpeed)?.skills?.GetSkill(SkillDefOf.Intellectual)?.Level;
+					int dodgeSkill = 0;
+					if (bestIntellectual.HasValue)
+						dodgeSkill = bestIntellectual.Value;
+					if (Rand.Chance(Mathf.Lerp(0.85f, 1.15f, pilotShootingSkill / 20f) - ShipInteriorMod2.ShuttleDodgeChance(shuttleHit, dodgeSkill))) //.733 - .225
+					{
+						CompVehicleHeatNet heatNet = shuttleHit.GetComp<CompVehicleHeatNet>();
+						if (shuttleHit.GetComp<CompShipHeatShield>() != null && shuttleHit.statHandler.componentsByKeys["shieldGenerator"].health > 10 && heatNet != null && heatNet.myNet.StorageUsed < heatNet.myNet.StorageCapacity) //Shield takes the hit
+						{
+							Projectile dummyProjectile = (Projectile)ThingMaker.MakeThing(ResourceBank.ThingDefOf.Shuttle_Laser);
+							shuttleHit.GetComp<CompShipHeatShield>().HitShield(dummyProjectile);
+							dummyProjectile.Destroy();
+						}
+						else
+						{
+							shuttleHit.TakeDamage(new DamageInfo(ResourceBank.ThingDefOf.Shuttle_Laser.projectile.damageDef, ResourceBank.ThingDefOf.Shuttle_Laser.projectile.damageAmountBase), IntVec2.Zero);
+							if (shuttleHit.statHandler.GetStatValue(VehicleStatDefOf.BodyIntegrity) <= 0)
+							{
+								if (shuttleHit.Faction == Faction.OfPlayer)
+									Messages.Message(TranslatorFormattedStringExtensions.Translate("SoS.CombatPodDestroyedPlayer"), null, MessageTypeDefOf.NegativeEvent);
+								else
+									Messages.Message(TranslatorFormattedStringExtensions.Translate("SoS.CombatPodDestroyedEnemy"), null, MessageTypeDefOf.PositiveEvent);
+								TargetMapComp.DeRegisterShuttleMission(TargetMapComp.ShuttleMissions.Where(otherMission => otherMission.shuttle == shuttleHit).First(), true);
+								foreach (Pawn pawn in shuttleHit.AllPawnsAboard.ListFullCopy())
+								{
+									if (pawn.Faction == Faction.OfPlayer && (ModSettings_SoS.easyMode || Rand.Chance(0.5f)))
+									{
+										HealthUtility.DamageUntilDowned(pawn, false);
+										shuttleHit.RemovePawn(pawn);
+										DropPodUtility.DropThingsNear(DropCellFinder.RandomDropSpot(ShipCombatOriginMap), OriginMapComp.map, new List<Thing> { pawn });
+									}
+									else
+									{
+										shuttleHit.RemovePawn(pawn);
+										pawn.Kill(new DamageInfo(DamageDefOf.Bomb, 100f));
+										if (pawn.Faction == Faction.OfPlayer)
+											DropPodUtility.DropThingsNear(DropCellFinder.RandomDropSpot(ShipCombatOriginMap), OriginMapComp.map, new List<Thing> { pawn.Corpse });
+									}
+								}
+								foreach (Thing cargo in shuttleHit.GetDirectlyHeldThings())
+									cargo.Kill();
+							}
+							else if (shuttleHit.statHandler.GetStatValue(VehicleStatDefOf.BodyIntegrity) <= ((CompShuttleLauncher)shuttleHit.CompVehicleLauncher).retreatAtHealth)
+							{
+								ShuttleMissionData missionData = TargetMapComp.ShuttleMissions.Where(otherMission => otherMission.shuttle == shuttleHit).First();
+								if (missionData.mission != ShuttleMission.RETURN)
+								{
+									if (shuttleHit.Faction == Faction.OfPlayer)
+										Messages.Message("SoS.ShuttleRetreat".Translate(), MessageTypeDefOf.NegativeEvent);
+									else
+										Messages.Message("SoS.EnemyShuttleRetreat".Translate(), MessageTypeDefOf.PositiveEvent);
+								}
+								missionData.mission = ShipMapComp.ShuttleMission.RETURN;
+							}
+						}
+					}
+					mission.shuttle.compFuel.ConsumeFuel(2);
+					mission.weaponCooldown = 80f;
+				}
+			}
+		}
+		public void ShuttleBomb(ShuttleMissionData mission)
+		{
+			int? bestSkill = mission.shuttle.FindPawnWithBestStat(StatDefOf.ShootingAccuracyPawn)?.skills?.GetSkill(SkillDefOf.Shooting)?.Level;
+			int skill = 0;
+			if (bestSkill.HasValue)
+				skill = bestSkill.Value;
+			float missAngle = Mathf.Lerp(4f, 2f, skill / 20f);
+			IntVec3 targetCell = (mission.shuttle.Faction == Faction.OfPlayer ? ShipCombatTargetMap.listerBuildings.allBuildingsNonColonist.RandomElement().Position : ShipCombatTargetMap.listerBuildings.allBuildingsColonist.RandomElement().Position);
+			IntVec3 spawnCell = FindClosestEdgeCell(ShipCombatTargetMap, targetCell);
+			foreach (VehicleTurret turret in mission.shuttle.CompVehicleTurrets.turrets)
+			{
+				if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleTorpedo && turret.loadedAmmo != null)
+				{
+					Projectile projectile = (Projectile)GenSpawn.Spawn(turret.loadedAmmo.projectileWhenLoaded.interactionCellIcon, spawnCell, ShipCombatTargetMap);
+					IntVec3 a = targetCell - spawnCell;
+					float angle = a.AngleFlat + Rand.Range(-missAngle, missAngle);
+					IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
+					projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
+					Thing torpToLoad = mission.shuttle.inventory.innerContainer.Where(thing => thing.HasThingCategory(ResourceBank.ThingCategoryDefOf.SpaceTorpedoes)).FirstOrDefault();
+					if (torpToLoad == null)
+					{
+						if (mission.shuttle.Faction == Faction.OfPlayer)
+							Messages.Message("SoS.ShuttleOutOfTorps".Translate(), MessageTypeDefOf.CautionInput);
+						else
+							Messages.Message("SoS.EnemyShuttleOutOfTorps".Translate(), MessageTypeDefOf.PositiveEvent);
+						mission.mission = ShuttleMission.RETURN;
+					}
+					else
+					{
+						turret.shellCount = 0;
+						turret.AutoReloadCannon();
+					}
+				}
+				else if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser)
+				{
+					for (int i = 0; i < 6; i++)
+					{
+						Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Laser, spawnCell, ShipCombatTargetMap);
+						IntVec3 a = targetCell - spawnCell;
+						float angle = a.AngleFlat + Rand.Range(-2, 2);
+						IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
+						projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
+					}
+					mission.shuttle.compFuel.ConsumeFuel(2);
+				}
+				else if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttlePlasma)
+				{
+					Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Plasma, spawnCell, ShipCombatTargetMap);
+					IntVec3 a = targetCell - spawnCell;
+					float angle = a.AngleFlat + Rand.Range(-4, 4);
+					IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
+					projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
+					mission.shuttle.compFuel.ConsumeFuel(2);
+				}
+			}
+			mission.weaponCooldown = 2400f;
+		}
+		public void ShuttleStrafe(ShuttleMissionData mission)
+		{
+			int? bestSkill = mission.shuttle.FindPawnWithBestStat(StatDefOf.ShootingAccuracyPawn)?.skills?.GetSkill(SkillDefOf.Shooting)?.Level;
+			int skill = 0;
+			if (bestSkill.HasValue)
+				skill = bestSkill.Value;
+			float missAngle = Mathf.Lerp(1.5f, 0.5f, skill / 20f);
+			IntVec3 targetCell;
+			if (mission.shuttle.Faction == Faction.OfPlayer)
+			{
+				if (TargetMapComp.ShuttleTarget != IntVec3.Invalid)
+					targetCell = TargetMapComp.ShuttleTarget;
+				else
+					targetCell = ShipCombatTargetMap.listerBuildings.allBuildingsNonColonist.RandomElement().Position;
+
+			}
+			else
+				targetCell = ShipCombatTargetMap.listerBuildings.allBuildingsColonist.RandomElement().Position;
+			IntVec3 spawnCell = FindClosestEdgeCell(ShipCombatTargetMap, targetCell);
+			foreach (VehicleTurret turret in mission.shuttle.CompVehicleTurrets.turrets)
+			{
+				if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttleLaser)
+				{
+					Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Laser_Space, spawnCell, ShipCombatTargetMap);
+					IntVec3 a = targetCell - spawnCell;
+					float angle = a.AngleFlat + Rand.Range(-missAngle / 4f, missAngle / 4f);
+					IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
+					projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
+					mission.shuttle.compFuel.ConsumeFuel(2);
+				}
+				else if (turret.turretDef == ResourceBank.VehicleTurretDefOf.SoS2ShuttlePlasma)
+				{
+					Projectile projectile = (Projectile)GenSpawn.Spawn(ResourceBank.ThingDefOf.Shuttle_Plasma, spawnCell, ShipCombatTargetMap);
+					IntVec3 a = targetCell - spawnCell;
+					float angle = a.AngleFlat + Rand.Range(-missAngle, missAngle);
+					IntVec3 c = spawnCell + new Vector3(1000 * Mathf.Sin(Mathf.Deg2Rad * angle), 0, 1000 * Mathf.Cos(Mathf.Deg2Rad * angle)).ToIntVec3();
+					projectile.Launch(mission.shuttle, spawnCell.ToVector3Shifted(), c, targetCell, ProjectileHitFlags.All);
+					mission.shuttle.compFuel.ConsumeFuel(2);
+				}
+			}
+			mission.weaponCooldown = 120f;
 		}
 	}
 }
