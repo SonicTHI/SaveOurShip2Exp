@@ -140,14 +140,14 @@ namespace SaveOurShip2
                 {
 					VehiclePawn shuttleHit = mapComp.TargetMapComp.ShuttlesInRange.Where(shuttle => shuttle.Faction != turret.Faction).RandomElement();
 					int? targetIntellectualSkill = (shuttleHit.FindPawnWithBestStat(StatDefOf.ResearchSpeed)?.skills?.GetSkill(SkillDefOf.Intellectual)?.Level);
-					int skill = 0;
+					int dodgeSkill = 0;
 					if (targetIntellectualSkill.HasValue)
-						skill = targetIntellectualSkill.Value;
-					if(verbProps.defaultProjectile.thingClass!=typeof(Projectile_ExplosiveShipLaser) && Rand.Chance(0.75f))
+						dodgeSkill = targetIntellectualSkill.Value;
+					if(verbProps.defaultProjectile.thingClass!=typeof(Projectile_ExplosiveShipLaser) && Rand.Chance(0.5f))
                     {
-						Log.Message("Shuttle dodged non-laser weapon");
+						//Log.Message("Shuttle dodged non-laser weapon");
                     }
-					else if(Rand.Chance(1f-(shuttleHit.GetStatValue(ResourceBank.VehicleStatDefOf.SoS2CombatDodgeChance) / Mathf.Lerp(120, 80, skill / 20f))))
+					else if(Rand.Chance(1f - ShipInteriorMod2.ShuttleDodgeChance(shuttleHit, dodgeSkill))) //.583 - .375
 					{
 						CompVehicleHeatNet heatNet = shuttleHit.GetComp<CompVehicleHeatNet>();
 						if (shuttleHit.GetComp<CompShipHeatShield>() != null && shuttleHit.statHandler.componentsByKeys["shieldGenerator"].health > 10 && heatNet != null && heatNet.myNet.StorageUsed < heatNet.myNet.StorageCapacity) //Shield takes the hit

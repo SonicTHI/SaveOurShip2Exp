@@ -152,6 +152,13 @@
 	<SoS.StatsShipHeatMaximum>Heat maximum: {0}</SoS.StatsShipHeatMaximum>
 	<SoS.StatsShipCombatRating>Combat rating: {0}</SoS.StatsShipCombatRating>
 	<SoS.StatsShipCombatThrust>Thrust/Weight ratio: {0}</SoS.StatsShipCombatThrust>
+	<SoS.StatsUIEnergy>Energy: {0} / {1}</SoS.StatsUIEnergy>
+	<SoS.StatsUIHeat>Heat: {0} / {1}</SoS.StatsUIHeat>
+	<SoS.StatsUIHull>Hull: {0}%</SoS.StatsUIHull>
+	<SoS.StatsUIShields>Shields: {0}</SoS.StatsUIShields>
+	<SoS.StatsUIEnergyNA>Energy: N/A</SoS.StatsUIEnergyNA>
+	<SoS.StatsUIHeatNA>Heat: N/A</SoS.StatsUIHeatNA>
+	<SoS.StatsUINA>N/A</SoS.StatsUINA>
 	<SoS.ReportInterReady>Ready for interstellar travel.</SoS.ReportInterReady>
 	<SoS.ReportInterNotReady>Not ready for interstellar travel:</SoS.ReportInterNotReady>
 	<SoS.ReportNeedPilot>Ship requires either a pilot or an AI core.</SoS.ReportNeedPilot>
@@ -190,6 +197,8 @@
 	<SoS.LandDesc>Land this ship near </SoS.LandDesc>
 	<SoS.Rebuild>Rebuild ship parts</SoS.Rebuild>
 	<SoS.RebuildDesc>Places blueprints for destroyed buildings on this ship.</SoS.RebuildDesc>
+	<SoS.Hack>Hack</SoS.Hack>
+	<SoS.HackFailed>Hack failed</SoS.HackFailed>
 	<!-- story -->
 	<SoS.QuestPillarA>Attack KSS Horizon</SoS.QuestPillarA>
 	<SoS.QuestPillarADesc>Attempt to engage the ancient terraforming station and recover an archotech pillar</SoS.QuestPillarADesc>
@@ -208,6 +217,7 @@
 	<!-- airlock -->
 	<SoS.ToggleDock>Toggle extender</SoS.ToggleDock>
 	<SoS.ToggleDockDesc>Extend or retract the airlock extender up to 3 tiles away</SoS.ToggleDockDesc>
+	<SoS.AirlockBreach>Breach</SoS.AirlockBreach>
 	<SoS.AirlockHacked>Airlock hack successful!</SoS.AirlockHacked>
 	<SoS.AirlockHackFailed>Airlock hacking failed!</SoS.AirlockHackFailed>
 	<SoS.AirlockBreached>Airlock breached!</SoS.AirlockBreached>

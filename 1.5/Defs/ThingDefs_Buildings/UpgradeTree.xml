@@ -241,7 +241,7 @@
 						<vehicleStats>
 							<li>
 								<def>SoS2CombatDodgeChance</def>
-								<value>25</value>
+								<value>15</value>
 								<type>Add</type>
 							</li>
 						</vehicleStats>
@@ -321,7 +321,7 @@
 							</li>
 							<li>
 								<def>SoS2CombatDodgeChance</def>
-								<value>25</value>
+								<value>15</value>
 								<type>Add</type>
 							</li>
 							<li>
@@ -548,7 +548,7 @@
 							</li>
 							<li>
 								<def>SoS2CombatDodgeChance</def>
-								<value>50</value>
+								<value>25</value>
 								<type>Add</type>
 							</li>
 						</vehicleStats>

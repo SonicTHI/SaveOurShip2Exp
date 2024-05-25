@@ -350,9 +350,9 @@ namespace SaveOurShip2
 			rect.x = offset;
 			rect.height = Text.LineHeight;
 			if (bridge.powerCap > 0)
-				Widgets.Label(rect, "Energy: " + bridge.power + " / " + bridge.powerCap);
+				Widgets.Label(rect, TranslatorFormattedStringExtensions.Translate("SoS.StatsUIEnergy", bridge.power, bridge.powerCap));
 			else
-				Widgets.Label(rect, "<color=red>Energy: N/A</color>");
+				Widgets.Label(rect, TranslatorFormattedStringExtensions.Translate("SoS.StatsUIEnergyNA").Colorize(Color.red));
 		}
 		private static void DrawHeat(float offset, float baseY, Building_ShipBridge bridge)
 		{
@@ -362,9 +362,9 @@ namespace SaveOurShip2
 			rect.x = offset;
 			rect.height = Text.LineHeight;
 			if (bridge.heatCap > 0)
-				Widgets.Label(rect, "Heat: " + Mathf.Floor(bridge.heat) + " / " + bridge.heatCap);
+				Widgets.Label(rect, TranslatorFormattedStringExtensions.Translate("SoS.StatsUIHeat", bridge.heat, bridge.heatCap));
 			else
-				Widgets.Label(rect, "<color=red>Heat: N/A</color>");
+				Widgets.Label(rect, TranslatorFormattedStringExtensions.Translate("SoS.StatsUIHeatNA").Colorize(Color.red));
 		}
 		private static void DrawShuttleHealth(float offset, float baseY, VehiclePawn shuttle)
 		{
@@ -373,7 +373,7 @@ namespace SaveOurShip2
 			rect.y += 5;
 			rect.x = offset;
 			rect.height = Text.LineHeight;
-			Widgets.Label(rect, "Hull: " + Mathf.Round(shuttle.statHandler.GetStatValue(VehicleStatDefOf.BodyIntegrity) * 100f) + "%");
+			Widgets.Label(rect, TranslatorFormattedStringExtensions.Translate("SoS.StatsUIHull", Mathf.Round(shuttle.statHandler.GetStatValue(VehicleStatDefOf.BodyIntegrity) * 100f)));
 		}
 		private static void DrawShuttleHeat(float offset, float baseY, VehiclePawn shuttle)
 		{
@@ -390,7 +390,8 @@ namespace SaveOurShip2
 			rect.y += 5;
 			rect.x = offset;
 			rect.height = Text.LineHeight;
-			Widgets.Label(rect, "Shields: " + (heatMax == 0 ? "N/A" : (Mathf.Round((1f - heatCurrent / heatMax) * 100f) + "%")));
+			string heat = (heatMax == 0 ? "SoS.StatsUINA".Translate().ToString() : (Mathf.Round((1f - heatCurrent / heatMax) * 100f) + "%"));
+			Widgets.Label(rect, TranslatorFormattedStringExtensions.Translate("SoS.StatsUIShields", heat));
 		}
 		public static Rect FillableBarWithDepletion(Rect rect, float fillPercent, float fillDepletion, Texture2D fillTex, Texture2D depletionTex)
 		{
@@ -2782,12 +2783,18 @@ namespace SaveOurShip2
 
 	//EVA
 	[HarmonyPatch(typeof(Pawn_PathFollower), "SetupMoveIntoNextCell")]
-	public static class EVAMovesFastInSpace
+	public static class SpaceMoveSpeedAdjusts
 	{
 		public static void Postfix(Pawn_PathFollower __instance, Pawn ___pawn)
 		{
 			if (___pawn.Map.terrainGrid.TerrainAt(__instance.nextCell) != ResourceBank.TerrainDefOf.EmptySpace)
 			{
+				return;
+			}
+			if (___pawn is VehiclePawn vehicle && !ShipInteriorMod2.IsShuttle(vehicle)) //no vroom vroom in space
+			{
+				__instance.nextCellCostLeft *= 20;
+				__instance.nextCellCostTotal *= 20;
 				return;
 			}
 			float vacuumSpeedMultiplier = ___pawn.GetStatValue(ResourceBank.StatDefOf.VacuumSpeedMultiplier);
@@ -2873,7 +2880,7 @@ namespace SaveOurShip2
 	{
 		public static bool Prefix(Pawn generated, Pawn other)
 		{
-			if (!generated.RaceProps.Humanlike || !other.RaceProps.Humanlike || generated.kindDef.defName.Contains("Space") || other.kindDef.defName.Contains("Space"))
+			if (!generated.RaceProps.Humanlike || !other.RaceProps.Humanlike || generated.kindDef.defName.Contains("Space") || other.kindDef.defName.Contains("Space") || generated.story.Childhood == ResourceBank.BackstoryDefOf.SoSHologram || other.story.Childhood == ResourceBank.BackstoryDefOf.SoSHologram)
 			{
 				return false;
 			}
