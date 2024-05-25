@@ -5003,18 +5003,6 @@ namespace SaveOurShip2
         }
 	}
 
-	[HarmonyPatch(typeof(WorkGiver_BuildRoof), "ShouldSkip")]
-	public static class NoRoofsInSpace
-    {
-		public static void Postfix(ref bool __result, Pawn pawn)
-        {
-			if(pawn.Map.IsSpace())
-            {
-				__result = true;
-            }
-        }
-    }
-
 	[HarmonyPatch(typeof(AutoBuildRoofAreaSetter), "TryGenerateAreaNow", new Type[] { typeof(Room) })]
 	public static class NoRoofInSpace
 	{
