@@ -336,6 +336,12 @@ namespace SaveOurShip2
 			}
 			CreateShipSketch(map, rot, atmospheric);
 		}
+		public bool HasInternalPower()
+		{
+			if (!IsWreck && Core.powerComp.PowerNet.CurrentStoredEnergy() > 100)
+				return true;
+			return false;
+		}
 		public bool HasPilotRCSAndFuel(float fuelPercentNeeded, bool atmospheric)
 		{
 			if (!HasMannedBridge() || !HasRCS() || FuelNeeded(atmospheric) < MassActual * fuelPercentNeeded)

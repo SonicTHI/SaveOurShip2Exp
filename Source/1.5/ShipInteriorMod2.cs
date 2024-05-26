@@ -130,14 +130,14 @@ namespace SaveOurShip2
 		{
 			base.GetSettings<ModSettings_SoS>();
 		}
-		public const string SOS2version = "EXPv102f2";
+		public const string SOS2version = "EXPv102f3";
 		public const int SOS2ReqCurrentMinor = 5;
 		public const int SOS2ReqCurrentBuild = 4062;
 
 		public const float altitudeNominal = 1000f; //nominal altitude for ship map background render
 		public const float altitudeLand = 110f; //min altitude for ship map background render
 		public const float crittersleepBodySize = 0.7f;
-		public const float pctFuelLocal = 0.2f;
+		public const float pctFuelLocal = 0.1f;
 		public const float pctFuelMap = 0.05f;
 		public const float pctFuelSpace = 0.5f; //check is 1 since we dont want ships to crash right after takeoff
 		public const float pctFuelLand = 0.1f;
@@ -2060,20 +2060,22 @@ namespace SaveOurShip2
 					}
 					else
 					{
-						if (t is Pawn p)
-						{
-							pawns.Add(p);
-							/*if (p.Faction == Faction.OfPlayer && p.holdingOwner is Building) //pawns in containers, abort
-							{
-								Log.Message("Pawn holding thing: " + p.holdingOwner);
-								Messages.Message(TranslatorFormattedStringExtensions.Translate("SoS.MoveFailPawns", p.holdingOwner.Owner.ToString()), null, MessageTypeDefOf.NegativeEvent);
-								return;
-							}*/
-						}
-						else if (t is Plant plant)
+						if (t is Plant plant)
 							toMovePlants.Add(plant);
 						else
+						{
+							if (t is Pawn p)
+							{
+								pawns.Add(p);
+								/*if (p.Faction == Faction.OfPlayer && p.holdingOwner is Building) //pawns in containers, abort
+								{
+									Log.Message("Pawn holding thing: " + p.holdingOwner);
+									Messages.Message(TranslatorFormattedStringExtensions.Translate("SoS.MoveFailPawns", p.holdingOwner.Owner.ToString()), null, MessageTypeDefOf.NegativeEvent);
+									return;
+								}*/
+							}
 							toMoveThings.Add(t);
+						}
 					}
 				}
 				foreach (Pawn p in pawns) //drop carried things, add to move list
@@ -2487,14 +2489,6 @@ namespace SaveOurShip2
 				room.Temperature = t.Item2;
 			}
 
-			//landing - remove space map if no pawns or cores
-			if (!targetMapIsSpace && !sourceMap.spawnedThings.Any((Thing t) => (t is Pawn || (t is Building_ShipBridge b && b.mannableComp == null)) && !t.Destroyed))
-			{
-				WorldObject oldParent = sourceMap.Parent;
-				Current.Game.DeinitAndRemoveMap(sourceMap, false);
-				Find.World.worldObjects.Remove(oldParent);
-			}
-
 			//takeoff - explosions
 			if (!sourceMapIsSpace)
 			{
@@ -2551,6 +2545,15 @@ namespace SaveOurShip2
 			{
 				sec.RegenerateAllLayers(); //RegenerateDirtyLayers - some layers are not set dirty properly (zones), slower
 			}
+
+			//landing - remove space map if no pawns or cores
+			if (!targetMapIsSpace && !sourceMap.spawnedThings.Any((Thing t) => (t is Pawn || (t is Building_ShipBridge b && b.mannableComp == null)) && !t.Destroyed))
+			{
+				WorldObject oldParent = sourceMap.Parent;
+				Current.Game.DeinitAndRemoveMap(sourceMap, false);
+				Find.World.worldObjects.Remove(oldParent);
+			}
+
 			if (devMode)
 			{
 				watch.Record("finalize");

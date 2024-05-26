@@ -162,6 +162,7 @@
 	<SoS.ReportInterReady>Ready for interstellar travel.</SoS.ReportInterReady>
 	<SoS.ReportInterNotReady>Not ready for interstellar travel:</SoS.ReportInterNotReady>
 	<SoS.ReportNeedPilot>Ship requires either a pilot or an AI core.</SoS.ReportNeedPilot>
+	<SoS.ReportNeedEnergy>Ship requires at least 100Wd stored power in onboard capacitors.</SoS.ReportNeedEnergy>
 	<SoS.NeedsMoreFuel>Ship has {0} units of fuel, but requires {1} in engine fuel tanks.</SoS.NeedsMoreFuel>
 	<SoS.NeedsMorePower>Ship requires {0} Wd of stored power.</SoS.NeedsMorePower>
 	<SoS.NeedsMoreJTEngines>Ship requires more JT engines due to its size.</SoS.NeedsMoreJTEngines>

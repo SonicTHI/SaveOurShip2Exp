@@ -1781,6 +1781,8 @@ namespace SaveOurShip2
 				newResult.Add(TranslatorFormattedStringExtensions.Translate("ShipReportMissingPart") + ": " + ThingDefOf.Ship_SensorCluster.label);
 			if (!ship.HasMannedBridge())
 				newResult.Add(TranslatorFormattedStringExtensions.Translate("SoS.ReportNeedPilot"));
+			if (!ship.HasInternalPower())
+				newResult.Add(TranslatorFormattedStringExtensions.Translate("SoS.ReportNeedEnergy"));
 			//do not allow kidnapping other fac pawns/animals
 			foreach (Pawn p in ship.PawnsOnShip())
 			{
@@ -2789,12 +2791,6 @@ namespace SaveOurShip2
 		{
 			if (___pawn.Map.terrainGrid.TerrainAt(__instance.nextCell) != ResourceBank.TerrainDefOf.EmptySpace)
 			{
-				return;
-			}
-			if (___pawn is VehiclePawn vehicle && !ShipInteriorMod2.IsShuttle(vehicle)) //no vroom vroom in space
-			{
-				__instance.nextCellCostLeft *= 20;
-				__instance.nextCellCostTotal *= 20;
 				return;
 			}
 			if (___pawn is VehiclePawn vehicle && !ShipInteriorMod2.IsShuttle(vehicle)) //no vroom vroom in space
